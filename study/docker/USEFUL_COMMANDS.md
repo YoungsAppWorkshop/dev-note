@@ -130,17 +130,120 @@ This will start a ubuntu container with the entrypoint `/bin/bash`. Note that if
 - `-it` This will not make the container you started shut down immediately, as it will create a pseudo-TTY session (`-t`) and keep STDIN open (`-i`)
 - `--rm` Automatically remove the container when it exit. Otherwise it will be stored and visible running `docker ps -a`.
 - `--detach -d` Run container in background and print container ID
-- `--volume -v` Bind mount a volume. Useful for accessing folders on your local disk inside your docker container, like configuration files or storage that should be persisted (database, logs etc.).
+- `-p <host port>:<container port>`: Port mapping container port -> host port
+  - Example: `docker run -p 80:5000 kodekloud/simple-webapp`
+- `-v <host volume>:<container volume>`: Bind mount a volume. Useful for accessing folders on your local disk inside your docker container, like configuration files or storage that should be persisted (database, logs etc.)
+  - Example: `docker run -v /opt/datadir:/var/lib/mysql mysql`
+- `-e ENV_VAR=value`: Set a environment variable
 
-## 3. Learn More
+### 2.9. `docker volume`
 
-A list of more useful Docker commands can be found in the [docker-cheat-sheet](https://github.com/wsargent/docker-cheat-sheet).
+#### Volume Mounting
 
-## 4. Tips and Tricks
+Create a volume in volumes directory of the host
+
+- Path: `$DOCKER_HOME/volumes/VOLUME_NAME`
+
+```bash
+# Create a volume in host
+docker volume create VOLUME_NAME
+
+# Mount the volume to a container
+docker run -v VOLUME_NAME:/var/lib/mysql mysql
+```
+
+#### Bind Mounting
+
+Mount an external directory
+
+```bash
+# docker run -v <host path>:<container path> CONTAINER_NAME
+docker run -v /data/mysql:/var/lib/mysql mysql
+```
+
+### 2.10. Other commands
+
+- `docker version`: Show current version of docker
+- `docker pull <image name>`: Pull a docker image from the [Docker hub](https://hub.docker.com)
+- `docker inspect <container id>`: Inspect a container
+- `docker stop <container id>`: Stop a running container
+- `docker rm <container id>`: Remove a container
+
+## 3. Docker Compose
+
+### 3.1. Running containers using docker run command
+
+```bash
+docker run redis
+docker run postgres:9.4
+docker run voting-app
+docker run result
+docker run worker
+```
+
+### 3.2. Running containers using Docker Compose
+
+```yml
+# docker-compose.yml
+version: 2
+services:
+    redis:
+        image: redis
+        networks:
+            - back-end
+    db:
+        image: postgres:9.4
+        networks:
+            - back-end
+    vote:
+        build: ./vote   # Build docker image
+        ports:
+            - 5000:80
+        depends_on:
+            - redis
+        links:
+            - redis
+    result:
+        build: ./result
+        ports:
+            - 5001:80
+        links:
+            - db
+        networks:
+            - front-end
+            - back-end
+    worker:
+        build: ./worker
+        links:
+            - db
+            - redis
+        networks:
+            - front-end
+            - back-end
+networks:
+    front-end:
+    back-end:
+```
+
+- Run the stack: `docker-compose up`
+
+### 3.3. Example Docker compose stack
+
+![Example App 1](imgs/example-app-01.png)
+![Example App 2](imgs/example-app-02.png)
+![Example App 3](imgs/example-app-03.png)
+
+## 4. Learn More
+
+- [Youtube: Docker Tutorial](https://www.youtube.com/watch?v=fqMOX6JJhGo)
+- [KodeKloud Hands On Lab](https://beta.kodekloud.com/topic/labs-docker-compose/)
+- A list of more useful Docker commands can be found in the [docker-cheat-sheet](https://github.com/wsargent/docker-cheat-sheet).
+
+## 5. Tips and Tricks
 
 A collection of useful tips and tricks for Docker.
 
-### 4.1. Delete all containers
+### 5.1. Delete all containers
 
 **NOTE**: This will remove ALL your containers.
 
@@ -154,7 +257,7 @@ OR, if you're using an older docker client:
 docker rm $(docker ps -a -q)
 ```
 
-### 4.2. Delete all untagged containers
+### 5.2. Delete all untagged containers
 
 ```bash
 docker image prune
@@ -166,19 +269,19 @@ OR, if you're using an older docker client:
 docker rmi $(docker images | grep '^<none>' | awk '{print $3}')
 ```
 
-### 4.3. See all space Docker take up
+### 5.3. See all space Docker take up
 
 ```bash
 docker system df
 ```
 
-### 4.4. Get IP address of running container
+### 5.4. Get IP address of running container
 
 ```bash
 docker inspect [CONTAINER ID] | grep -wm1 IPAddress | cut -d '"' -f 4
 ```
 
-### 4.5. Kill all running containers
+### 5.5. Kill all running containers
 
 ```bash
 docker kill $(docker ps -q)

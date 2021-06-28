@@ -16,7 +16,6 @@ One solution to this problem is to use an additional piece of software that can 
 
 In this concept, you will learn about containers, which will solve the problem of environment consistency when you deploy your application from a development environment to a production environment.
 
-
 ![img-01](imgs/5-2-1.png)
 ![img-02](imgs/5-2-2.png)
 ![img-03](imgs/5-2-3.png)
@@ -121,6 +120,8 @@ WORKDIR /app
 RUN pip install --upgrade pip
 RUN pip install flask
 
+EXPOSE 8080
+
 ENTRYPOINT ["python", "app.py"]
 ```
 
@@ -130,6 +131,63 @@ For more information about Dockerfiles and commands, see:
 - [Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
 - `docker build` [command options and examples](https://docs.docker.com/engine/reference/commandline/build/)
 - `docker run` [command options and examples](https://docs.docker.com/engine/reference/commandline/run/)
+
+## Creating a Docker Image
+
+- Create a `Dockerfile`
+
+```docker
+FROM ubuntu
+
+RUN apt-get update
+RUN apt-get install python
+RUN pip install flask flask-mysql
+
+CMD command param1
+CMD ["command", "param1"]
+
+COPY . /opt/source-code
+
+ENTRYPOINT FLASK_APP=/opt/source-code/app.py flask run
+```
+
+- Build the Docker Image
+  - Build the Docker Image: `docker build <path-to-Dockerfile> -t <username>/<app-name>`
+  - Publish it on the Docker Hub: `docker push <username>/<app-name>`
+
+## Network
+
+- Default: Bridge Network (`172.17.x.x`)
+
+![Network](imgs/network-01.png)
+
+- Embedded DNS
+  - Internal IP addresses can be changed when containers are mounted.
+  - Use container name instead of IP addresses: `mysql.connect(<container name>)`
+
+### User-defined networks
+
+- Create user-defined networks
+
+```bash
+docker network create \
+    --driver bridge \
+    --subnet 182.18.0.0/16 \
+    custom-isolated-network
+```
+
+- List networks: `docker network ls`
+- Inspect: `docker inspect <container id>`
+
+## Layered Architecture
+
+![Layered Architecture 01](imgs/layered-architecture-01.png)
+![Layered Architecture 02](imgs/layered-architecture-02.png)
+![Layered Architecture 03](imgs/layered-architecture-03.png)
+
+## Volumes
+
+![Volumes](imgs/volumes-01.png)
 
 ## Exercise
 
