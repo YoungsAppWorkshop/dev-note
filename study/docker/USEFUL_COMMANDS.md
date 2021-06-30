@@ -226,6 +226,7 @@ networks:
 ```
 
 - Run the stack: `docker-compose up`
+  - `-f <filename>`
 
 ### 3.3. Example Docker compose stack
 
@@ -235,6 +236,7 @@ networks:
 
 ## 4. Learn More
 
+- [Docker docs](https://docs.docker.com)
 - [Youtube: Docker Tutorial](https://www.youtube.com/watch?v=fqMOX6JJhGo)
 - [KodeKloud Hands On Lab](https://beta.kodekloud.com/topic/labs-docker-compose/)
 - A list of more useful Docker commands can be found in the [docker-cheat-sheet](https://github.com/wsargent/docker-cheat-sheet).
@@ -285,4 +287,23 @@ docker inspect [CONTAINER ID] | grep -wm1 IPAddress | cut -d '"' -f 4
 
 ```bash
 docker kill $(docker ps -q)
+```
+
+### 5.6. Local Development Environment setup
+
+On Mac, Docker runs on a Virtual Machine.
+Containers' ports is exported to the VM's port.
+It is required to access to VM to access to the containers.
+
+```bash
+# Run MariaDB container
+$ docker run -p 3306:3306 -e MARIADB_ROOT_PASSWORD=password mariadb:latest
+
+# Find out VM's IP
+$ docker-machine ls
+NAME      ACTIVE   DRIVER       STATE     URL                         SWARM   DOCKER      ERRORS
+default   *        virtualbox   Running   tcp://192.168.99.100:2376           v19.03.12
+
+# Connect to container via mysql-client
+$ mysql -P 192.168.99.100:3306 -u root -p
 ```
