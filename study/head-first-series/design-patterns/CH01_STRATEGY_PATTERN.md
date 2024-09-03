@@ -1,7 +1,12 @@
 # Chapter 1. Intro to Design Patterns: Welcome to Design Patterns
 
+
 Someone has already solved your problems.
 Instead of code reuse, with patterns you get experience reuse.
+
+## The Strategy Pattern
+
+**The Strategy Pattern** defines a family of algorithms, encapsulates each one, and makes them interchangeable. Strategy lets the algorithm vary independently from clients that use it.
 
 ## The Problem
 
@@ -129,3 +134,37 @@ animal.makeSound();
 a = getAnimal();
 a.makeSound();
 ```
+
+### Integrating the Duck Behavior
+
+The key is that a Duck will now *delegate* its flying and quacking behavior, instead of using quacking and flying methods defined in the Duck class (or subclass). Here’s how:
+
+1. First we’ll add two instance variables to the Duck class called `flyBehavior` and `quackBehavior` that are declared as the interface type (not a concrete class implementation type).
+2. When a `MallardDuck` is instantiated, its constructor initializes the MallardDuck’s inherited quackBehavior instance variable to a new instance of type Quack (a QuackBehavior concrete implementation class).
+
+### The Big Picture on encapsulated behaviors
+
+![Class diagram Ch. 01](./imgs/ch01-01.png)
+
+#### HAS-A can be better than IS-A
+
+The HAS-A relationship is an interesting one: each duck has a `FlyBehavior` and a `QuackBehavior` to which it *delegates* flying and quacking. When you put two classes together like this you’re using **composition**. Instead of *inheriting* their behavior, the ducks get their behavior by being *composed* with the right behavior object.
+
+> Favor composition over inheritance.
+
+As you’ve seen, creating systems using composition gives you a lot more flexibility. Not only does it let you encapsulate a family of algorithms into their own set of classes, but it also lets you *change behavior at runtime* as long as the object you’re composing with implements the correct behavior interface.
+
+### Tools for your Design Toolbox
+
+![Design Toolbox](./imgs/ch01-02.png)
+
+- Knowing the OO basics does not make you a good OO designer.
+- Good OO designs are reusable, extensible, and maintainable.
+- Patterns show you how to build systems with good OO design qualities.
+- Patterns are proven object-oriented experience.
+- Patterns don’t give you code, they give you general solutions to design problems. You apply them to your specific application.
+- Patterns aren’t *invented* , they are *discovered*.
+- Most patterns and principles address issues of change in software.
+- Most patterns allow some part of a system to vary independently of all other parts.
+- We often try to take what varies in a system and encapsulate it.
+- Patterns provide a shared language that can maximize the value of your communication with other developers.
