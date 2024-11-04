@@ -231,3 +231,122 @@ Using CSS modules in Vue exports CSS styles from the style section into JavaScri
 }
 </style>
 ```
+
+## Ch 02. Working with Data
+
+### Understanding computed properties
+
+Computed properties are unique data types that will reactively update only when the source data used within the property is updated.
+
+```vue
+<script>
+export default {
+  data() {
+    return {
+      yourData: "your data"
+    }
+  },
+  computed: {
+    yourComputedProperty() {
+      return `${this.yourData}-computed`;
+    }
+  }
+}
+</script>
+```
+
+Let’s look at some examples of where you should consider using a computed property:
+
+- Form validation
+- Combining data props
+- Calculating and displaying complex information: Sometimes there is a need to perform an extra calculation or to extract specific information from one large data object source.
+
+### Understanding computed setters
+
+By default, computed data is a getter only, which means it will only output the outcome of your expression. In some practical scenarios, when a computed property is mutated, you may need to trigger an external API or mutate the original data elsewhere in the project. The function performing this feature is called a **setter**.
+
+```vue
+<script>
+export default {
+  data() {
+    return {
+      count: 0
+    }
+  },
+  method: {
+    callAnotherApi() { /* do something */ }
+  },
+  computed: {
+    myComputedDataProp: {
+      get() {
+        return this.count + 1
+      },
+      set(value) {
+        this.count = value - 1
+        this.callAnotherApi(this.count)
+      },
+    },
+  },
+}
+</script>
+```
+
+### Exploring watchers
+
+Vue watchers programmatically observe component data and run whenever a particular property changes. Watched data can contain two arguments: `oldVal` and `newVal`. This can help you when writing expressions to compare data before writing or binding new values. Watchers can observe objects as well as other types, such as `string`, `number`, and `array` types.
+
+If the `immediate` key is set to `true` on a watcher, then when this component initializes, it will run this watcher on creation. You can watch all keys inside any given object by including the key and value `deep: true` (the default is `false`).
+
+To clean up your watcher code, you can assign a `handler` argument to a defined component’s method, which is considered best practice for large projects. Watchers complement the usage of computed data since they passively observe values and cannot be used as normal Vue data variables, while computed data must always return a value and can be looked up. Remember *not* to use arrow functions if you need the Vue context of `this`.
+
+
+```vue
+<script>
+export default {
+  watch: {
+    myDataProperty: {
+      handler: function(newVal, oldVal) {
+        console.log('myDataProperty changed:', newVal, oldVal)
+      },
+      immediate: true,
+      deep: true
+    },
+  }
+}
+</script>
+```
+
+If you do not need to observe every key inside an object, it is more performant to assign a watcher to a specific key by specifying it following the syntax <object>.<key> string.
+
+```vue
+<script>
+export default {
+  data() {
+    return {
+      organization: {
+        name: 'ABC',
+        employees: ['Jack', 'Jill']
+      }
+    }
+  },
+  watch: {
+    'organization.name': {
+      handler: function(v) {
+        this.sendIntercomData()
+      },
+      immediate: true,
+    },
+  },
+}
+</script>
+```
+
+### Comparing methods, watchers, and computed properties
+
+Methods are best used as a handler to an event occurring in the DOM, and in situations where you need to call a function or perform an API call, for example, `Date.now()`. All values returned by methods are not cached.
+
+Methods should not be used to display computed data, since the return value of the method, unlike computed props, is not cached, potentially generating a performance impact on your application if misused.
+
+As mentioned, computed props are best used when reacting to data updates or for composing complicated expressions in your template. Computed properties also help increase the readability of your Vue component’s template and logic.
+
+However, in many cases, using computed props can be overkill, such as when you only want to watch a specific data’s nested property rather than the whole data object. Or when you need to listen and perform an action upon any changes of a data property or a specific property key nested inside a data property object, and then perform an action. In this case, data watchers should be used.
