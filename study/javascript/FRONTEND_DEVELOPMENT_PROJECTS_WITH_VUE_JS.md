@@ -350,3 +350,17 @@ Methods should not be used to display computed data, since the return value of t
 As mentioned, computed props are best used when reacting to data updates or for composing complicated expressions in your template. Computed properties also help increase the readability of your Vue component’s template and logic.
 
 However, in many cases, using computed props can be overkill, such as when you only want to watch a specific data’s nested property rather than the whole data object. Or when you need to listen and perform an action upon any changes of a data property or a specific property key nested inside a data property object, and then perform an action. In this case, data watchers should be used.
+
+## Ch 03. Vite and Vue Devtools
+
+### Using Vite
+
+`Vite.js` is the build management tool aiming to do the following:
+
+- Help you develop faster (locally develop your project with a more time-saving approach)
+- Build with optimization (bundle files for production with better performance)
+- Manage other aspects of your web project effectively (testing, linting, and so on)
+
+### Using Vue Devtools
+
+Vue Devtools is a browser extension for Chrome and Firefox and an Electron desktop app. You can install and run it from your browser to debug your Vue.js projects during development. This extension does not work in production or remotely run projects. You can download the Vue Devtools extension from the Chrome extension page.
