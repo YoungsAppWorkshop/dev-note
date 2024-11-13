@@ -255,7 +255,7 @@ export default {
 </script>
 ```
 
-Let’s look at some examples of where you should consider using a computed property:
+Let's look at some examples of where you should consider using a computed property:
 
 - Form validation
 - Combining data props
@@ -297,7 +297,7 @@ Vue watchers programmatically observe component data and run whenever a particul
 
 If the `immediate` key is set to `true` on a watcher, then when this component initializes, it will run this watcher on creation. You can watch all keys inside any given object by including the key and value `deep: true` (the default is `false`).
 
-To clean up your watcher code, you can assign a `handler` argument to a defined component’s method, which is considered best practice for large projects. Watchers complement the usage of computed data since they passively observe values and cannot be used as normal Vue data variables, while computed data must always return a value and can be looked up. Remember *not* to use arrow functions if you need the Vue context of `this`.
+To clean up your watcher code, you can assign a `handler` argument to a defined component's method, which is considered best practice for large projects. Watchers complement the usage of computed data since they passively observe values and cannot be used as normal Vue data variables, while computed data must always return a value and can be looked up. Remember *not* to use arrow functions if you need the Vue context of `this`.
 
 
 ```vue
@@ -347,9 +347,9 @@ Methods are best used as a handler to an event occurring in the DOM, and in situ
 
 Methods should not be used to display computed data, since the return value of the method, unlike computed props, is not cached, potentially generating a performance impact on your application if misused.
 
-As mentioned, computed props are best used when reacting to data updates or for composing complicated expressions in your template. Computed properties also help increase the readability of your Vue component’s template and logic.
+As mentioned, computed props are best used when reacting to data updates or for composing complicated expressions in your template. Computed properties also help increase the readability of your Vue component's template and logic.
 
-However, in many cases, using computed props can be overkill, such as when you only want to watch a specific data’s nested property rather than the whole data object. Or when you need to listen and perform an action upon any changes of a data property or a specific property key nested inside a data property object, and then perform an action. In this case, data watchers should be used.
+However, in many cases, using computed props can be overkill, such as when you only want to watch a specific data's nested property rather than the whole data object. Or when you need to listen and perform an action upon any changes of a data property or a specific property key nested inside a data property object, and then perform an action. In this case, data watchers should be used.
 
 ## Ch 03. Vite and Vue Devtools
 
@@ -364,3 +364,504 @@ However, in many cases, using computed props can be overkill, such as when you o
 ### Using Vue Devtools
 
 Vue Devtools is a browser extension for Chrome and Firefox and an Electron desktop app. You can install and run it from your browser to debug your Vue.js projects during development. This extension does not work in production or remotely run projects. You can download the Vue Devtools extension from the Chrome extension page.
+
+## Ch 04. Nesting Components (Modularity)
+
+### Passing props
+
+**Props** in the context of Vue are fields defined in a child component accessible on that component's instance (`this`) and in the component's `template`. The `props` property of a Vue component can be an array of strings or an object literal, each property field of which is a component's prop definition.
+
+```vue
+<!-- Defining a simple component that accepts props -->
+<template>
+  <div class="hello">
+    <h1>{{ msg }}</h1>
+    <!-- … -->
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'HelloWorld',
+  props: ['msg']
+}
+</script>
+
+<!-- Passing props to a component -->
+<script setup>
+import HelloWorld from "./components/HelloWorld.vue";
+</script>
+
+<template>
+<div id="app">
+    <HelloWorld msg="Vue.js"/>
+  </div>
+</template>
+```
+
+### Binding reactive data to props
+
+What if we want to pass reactive data from the parent to the child? This is where **binding** comes in. You can use `v-bind`: (or `:` for short) to enable one-way binding of a parent's reactive data to the child component's props.
+
+```vue
+<script setup>
+import HelloWorld from './components/HelloWorld.vue'
+const appWho = 'Vue.js'
+</script>
+
+<template>
+  <div id="app">
+    <HelloWorld :msg="appWho"/>
+  </div>
+</template>
+```
+
+### Understanding prop types and validation
+
+#### Primitive prop validation
+
+```vue
+<script>
+export default {
+  props: {
+    times: {
+      type: Number
+    },
+    content: {
+      type: String
+    }
+  },
+  computed: {
+    repetitions() {
+      return Array.from({ length: this.times });
+    }
+  }
+}
+</script>
+
+<template>
+  <div>
+    <span v-for="r in repetitions" :key="r">
+      {{ content }}
+    </span>
+  </div>
+</template>
+
+<!-- We can also use any valid JavaScript constructor as a prop's type,
+such as a Promise or a custom User class constructor. -->
+<script setup>
+import User from './user.js'
+export default {
+  props: {
+    todoListPromise: {
+      type: Promise
+    },
+    currentUser: {
+      type: User
+    }
+  }
+}
+</script>
+```
+
+#### Custom validation of arrays and objects
+
+Vue allows custom validators to be used as props using the validator property.
+
+```vue
+<script>
+export default {
+  props: {
+    selected: {
+      type: String
+    },
+    options: {
+      type: Array,
+      validator(options) {
+        return options.every(o => Boolean(o.value
+          && o.label))
+      }
+    }
+  }
+}
+</script>
+
+<template>
+  <select>
+    <option
+      :selected="selected === o.value"
+      v-for="o in options"
+      :key="o.value"
+    >
+      {{ o.label }}
+    </option>
+  </select>
+</template>
+```
+
+#### Understanding required props
+
+To mark a prop as required, we can use the `required` prop type property.
+
+```vue
+<script>
+export default {
+  // other component properties
+  props: {
+    selected: {
+      type: String,
+      required: true
+    }
+    // other prop definitions
+  }
+}
+</script>
+```
+
+#### Setting the default props value
+
+```vue
+<script>
+export default {
+  props: {
+    // other props
+    limit: {
+      type: Number,
+      default: 2,
+    },
+    offset: {
+      type: Number,
+      default: 0,
+    }
+  },
+  // other component properties
+}
+</script>
+```
+
+In cases where a prop is an array or an object, we can't assign its `default` value with a static array or object. Instead, we need to assign it a function that returns the desired default value.
+
+```vue
+<script>
+export default {
+  props: {
+    items: {
+      type: Array,
+      default() {
+        return []
+      }
+    }
+    // other props
+  },
+  // other component properties
+}
+</script>
+```
+
+#### Registering props in `<script setup>` (setup hook)
+
+If you use `<script setup>`, since there is no options object, we can’t define the component’s props using the props field. Instead, we use the `defineProps()` function from the vue package.
+
+```vue
+<script setup>
+import { defineProps, computed } from  'vue'
+const props = defineProps({
+  items: {
+    type: Array,
+    required: true,
+  },
+  limit: {
+    type: Number
+  },
+  offset: {
+    type: Number
+  }
+});
+const currentWindow = computed(() => {
+  return props.items.slice(props.offset, props.limit)
+})
+</script>
+```
+
+`defineProps()` returns an object containing all the props’ values. We can then access a prop such as items using `props.items` instead within the `script` section, and `items` as usual in the `template` section.
+
+### Understanding slots, named slots, and scoped slots
+
+**Slots** are sections of a component where the template/rendering is delegated back to the parent of the component. We can consider slots as templates or markup that are passed from a parent to a child for rendering in its main template.
+
+#### Passing markup to a component for rendering
+
+The simplest type of slot is the default child slot.
+
+```vue
+<!-- We can define a Box component with a slot as follows: -->
+<template>
+  <div>
+    <slot>Slot's placeholder</slot>
+  </div>
+</template>
+
+<!-- The following markup is for the parent component (src/App.vue):  -->
+<template>
+  <div>
+    <Box>
+      <h3>This whole h3 is rendered in the slot with parent count {{ count }}</h3>
+    </Box>
+    <button @click="count++">Increment</button>
+  </div>
+</template>
+
+<script>
+import Box from './components/Box.vue'
+export default {
+  components: {
+    Box
+  },
+  data() {
+    return { count: 0 }
+  }
+}
+</script>
+```
+
+Slots are a way to let the parent have control over rendering a section of a child’s template. Any references to instance properties, data, or methods will use the parent component instance. This type of slot does not have access to the child component’s properties, props, or data.
+
+#### Using named slots to delegate rendering of multiple sections
+
+We use named slots when a child component wants to allow its parent to customize the multiple sections in its template. For example, an `Article` component might delegate rendering of `title` and `excerpt` to its parent.
+
+```vue
+<!-- Child -->
+<template>
+  <article>
+    <div>Title: <slot name="title" /></div>
+    <div>Excerpt: <slot name="excerpt" /></div>
+  </article>
+</template>
+
+<!-- Parent -->
+<template>
+  <div>
+    <Article>
+      <template v-slot:title>
+        <h3>My Article Title</h3>
+      </template>
+      <template v-slot:excerpt>
+        <p>First paragraph of content</p>
+        <p>Second paragraph of content</p>
+      </template>
+    </Article>
+  </div>
+</template>
+<script>
+import Article from './components/Article.vue'
+export default {
+  components: {
+    Article
+  }
+}
+</script>
+```
+
+The shorthand syntax for `v-slot:slot-name` is `#slot-name`. We can refactor our template that consumes Article as follows:
+
+```vue
+<template>
+  <div>
+    <Article>
+      <template #title>
+        <h3>My Article Title</h3>
+      </template>
+      <template #excerpt>
+        <p>First paragraph of content</p>
+        <p>Second paragraph of content</p>
+      </template>
+    </Article>
+  </div>
+</template>
+```
+
+Note here that `v-slot` cannot be used with native elements. You can only use it with `template` and/or with the component itself. For example, the following `<template>` section attempts to set a `v-slot` on a `h3` element:
+
+```vue
+<template>
+  <div>
+    <Article>
+      <h3 v-slot:title>My Article Title</h3>
+    </Article>
+  </div>
+</template>
+```
+
+This template will fail with a compilation error of `v-slot can only be used on components or <template>`.
+
+#### Using scoped slots to wrap prop-passing logic
+
+The types of slots we have explored so far only have access to the component instance where slot template content is passed – the parent component.
+
+In many scenarios, it is handier to let the parent component decide how to render the UI while letting the child component handle the data and pass it to the slot. We use scoped slots for this purpose.
+
+A **scoped slot** starts with the child component’s slots, where the `slot` element receives props and passes them to the related template content by using `v-bind` or the shorthand, `:`.
+
+```vue
+<!-- Child  -->
+<template>
+  <ul>
+    <li
+      v-for="el in currentWindow"
+      :key="el.id"
+    >
+      <slot :item="el" />
+    </li>
+  </ul>
+</template>
+<script>
+export default {
+  props: ['items', 'limit', 'offset'],
+  computed: {
+    currentWindow() {
+      return this.items.slice(this.offset, this.limit)
+    }
+  }
+}
+</script>
+
+<!-- Parent  -->
+<script>
+import PaginatedList from './components/PaginatedList.vue'
+export default {
+  components: {
+    PaginatedList
+  },
+  data() {
+    return {
+      snacks: [
+        {
+          id: 'ready-salted',
+          content: 'Ready Salted'
+        },
+        {
+          id: 'cheese-onion',
+          content: 'Cheese & Onion'
+        },
+        {
+          id: 'salt-vinegar',
+          content: 'Salt & Vinegar'
+        },
+      ]
+    }
+  }
+}
+</script>
+
+<template>
+  <div>
+    <PaginatedList :items="snacks">
+      <template #default="{ item }">
+        {{ item.content }}
+      </template>
+    </PaginatedList>
+  </div>
+</template>
+```
+
+### Understanding Vue refs
+
+In Vue, **refs** are references to DOM elements or other component instances that have been mounted to the DOM. One of the major use cases for refs is direct DOM manipulation and integration with DOM-based libraries (that usually take a DOM node they should mount to), such as an animation library.
+
+We define refs by using the syntax `ref="name"` on a native element or child component in the template.
+
+```vue
+<template>
+  <div id="app">
+    <input ref="theInput" />
+    <button @click="focus()">Focus Input</button>
+  </div>
+</template>
+<script>
+export default {
+  methods: {
+    focus() {
+      this.$refs.theInput.focus()
+    }
+  }
+}
+</script>
+```
+
+Note here that we can only access `$refs` once the component is mounted to the DOM. Hence `this.$refs.theInput` in our example is only available in the `mounted()` life cycle hook. Also, if you use `<script setup>`, there is no `$refs` available since there is no this and setup runs before the component instance is created. Hence to use DOM references with `<script setup>` or the `setup` hook, we use the `ref()` function from the Composition API instead.
+
+### Using events for child-parent communication
+
+To pass data from a child component back to a parent component, Vue offers custom events.
+
+In a component, we can emit an event using the `$emit` method; with `this.$emit('eventName', payload)` within `<script>`; or just with `$emit` within the `template` section.
+
+```vue
+<script>
+export default {
+  data () {
+    return {
+      message: null
+    }
+  },
+  methods: {
+    send() {
+      this.$emit('send', this.message);
+    }
+  }
+}
+</script>
+<!-- In the same scenario, we could trigger a send event from the template section as follows: -->
+<template>
+  <div>
+    <input v-model="message" />
+    <button @click="$emit('send', message)">Emit inline</button>
+  </div>
+</template>
+```
+
+From a parent component, we can use `v-on:event-name` or the shorthand `@event-name`. `event-name` must match the name passed to `$emit`. Note `eventName` and `event-name` are not equivalent.
+
+```vue
+<template>
+  <div id="app">
+    <p>Message: {{ parentMessage }}</p>
+    <MessageEditor @send="updateParentMessage" />
+    <button @click="parentMessage = null">Reset</button>
+  </div>
+</template>
+<script>
+import MessageEditor from './components/MessageEditor.vue'
+export default {
+  components: {
+    MessageEditor
+  },
+  data() {
+    return {
+      parentMessage: null
+    }
+  },
+  methods: {
+    updateParentMessage(newMessage) {
+      this.parentMessage = newMessage
+    }
+  }
+}
+</script>
+```
+
+Custom events support passing any JavaScript type as the payload. The event name, however, must be a `String`.
+
+#### Registering events with `<script setup>` (or `setup` hook)
+
+If you use `<script setup>`, since there is no component’s options object, we can’t define custom events using the `emits` field. Instead, we use the `defineEmits()` function from the vue package and pass all the relevant events’ definitions to it.
+
+```vue
+<script setup>
+import { defineEmits, ref } from  'vue'
+const message = ref(null)
+const emits = defineEmits(['send'])
+emits('send', message.value);
+</script>
+```
