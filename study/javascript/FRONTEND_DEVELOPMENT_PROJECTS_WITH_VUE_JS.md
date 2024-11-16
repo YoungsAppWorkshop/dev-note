@@ -560,7 +560,7 @@ export default {
 
 #### Registering props in `<script setup>` (setup hook)
 
-If you use `<script setup>`, since there is no options object, we can’t define the component’s props using the props field. Instead, we use the `defineProps()` function from the vue package.
+If you use `<script setup>`, since there is no options object, we can't define the component's props using the props field. Instead, we use the `defineProps()` function from the vue package.
 
 ```vue
 <script setup>
@@ -583,7 +583,7 @@ const currentWindow = computed(() => {
 </script>
 ```
 
-`defineProps()` returns an object containing all the props’ values. We can then access a prop such as items using `props.items` instead within the `script` section, and `items` as usual in the `template` section.
+`defineProps()` returns an object containing all the props' values. We can then access a prop such as items using `props.items` instead within the `script` section, and `items` as usual in the `template` section.
 
 ### Understanding slots, named slots, and scoped slots
 
@@ -624,7 +624,7 @@ export default {
 </script>
 ```
 
-Slots are a way to let the parent have control over rendering a section of a child’s template. Any references to instance properties, data, or methods will use the parent component instance. This type of slot does not have access to the child component’s properties, props, or data.
+Slots are a way to let the parent have control over rendering a section of a child's template. Any references to instance properties, data, or methods will use the parent component instance. This type of slot does not have access to the child component's properties, props, or data.
 
 #### Using named slots to delegate rendering of multiple sections
 
@@ -697,11 +697,11 @@ This template will fail with a compilation error of `v-slot can only be used on 
 
 #### Using scoped slots to wrap prop-passing logic
 
-The types of slots we have explored so far only have access to the component instance where slot template content is passed – the parent component.
+The types of slots we have explored so far only have access to the component instance where slot template content is passed - the parent component.
 
 In many scenarios, it is handier to let the parent component decide how to render the UI while letting the child component handle the data and pass it to the slot. We use scoped slots for this purpose.
 
-A **scoped slot** starts with the child component’s slots, where the `slot` element receives props and passes them to the related template content by using `v-bind` or the shorthand, `:`.
+A **scoped slot** starts with the child component's slots, where the `slot` element receives props and passes them to the related template content by using `v-bind` or the shorthand, `:`.
 
 ```vue
 <!-- Child  -->
@@ -855,7 +855,7 @@ Custom events support passing any JavaScript type as the payload. The event name
 
 #### Registering events with `<script setup>` (or `setup` hook)
 
-If you use `<script setup>`, since there is no component’s options object, we can’t define custom events using the `emits` field. Instead, we use the `defineEmits()` function from the vue package and pass all the relevant events’ definitions to it.
+If you use `<script setup>`, since there is no component's options object, we can't define custom events using the `emits` field. Instead, we use the `defineEmits()` function from the vue package and pass all the relevant events' definitions to it.
 
 ```vue
 <script setup>
@@ -863,5 +863,248 @@ import { defineEmits, ref } from  'vue'
 const message = ref(null)
 const emits = defineEmits(['send'])
 emits('send', message.value);
+</script>
+```
+
+## Ch 05. Composition API
+
+### Creating components with the `setup()` lifecycle method
+
+`setup()` is the first hook the Vue engine will run in a component's lifecycle before the beforeCreate() hook. At this point, Vue hasn't defined a component instance or any component data.
+
+`setup()` accepts two arguments, which are as follows:
+
+- `props`: All the reactive props data is passed to the component from its parent. You need to declare the props using the `props` field in the Options API as usual. Note that you shouldn't de-structure the `props` object to avoid losing the reactivity for the de-structured field.
+- `context`: These are all the non-reactive fields for the component, such as `attrs`, `slots`, `emit`, and `expose`.
+
+```vue
+<script setup>
+const message = 'Hello World'
+</script>
+
+<!-- The preceding code is equal to the following using setup():  -->
+<script>
+export default {
+  setup(props, context) {
+    const message = 'Hello World'
+    return {
+      message
+    }
+  }
+}
+</script>
+```
+
+With `<script setup>`, if you need to use the props parameter, you need to import `defineProps()` from the vue package and define the props within the `<script setup>` section, as shown in the following example:
+
+```vue
+<script setup>
+import { defineProps } from 'vue'
+const { userName } = defineProps({ userName: string });
+</script>
+```
+
+### Creating a component with `setup()` and `h()`
+
+In many scenarios where you need to render a static functional component or a static component structure based on the context and props received, using `h()` and `setup()` can be helpful. The `h()` function syntax is as follows:
+
+  `h(Element, props, children)`
+
+`h()` receives the following parameters:
+
+- A string representing a DOM element (`div`, for instance) or a Vue component.
+- The props to pass to the created component node, including native properties and attributes, such as `class`, `style`, and so on, and event listeners. This parameter is optional.
+- The array of children for the component or object of the slot functions. This parameter is also optional.
+
+Instead of returning the object containing a static internal data state and using the template section, `setup()` will return a function that returns the component node created by the `h()` function based on the parameters received.
+
+```vue
+<script>
+import { h } from 'vue';
+export default {
+ setup() {
+   const message = 'Hello World'
+   return () => h('div', { style: { color: 'blue' } }, message)
+ }
+}
+</script>
+```
+
+### Working with data
+
+In the Options API, we use the `data()` method to initialize a component's local state. By default, all the data properties received from `data()` are reactive, which can be overkill in many scenarios.
+
+Vue has introduced the `ref()` and `reactive()` functions, which allow us to decide which local states should be reactive and which shouldn't be.
+
+#### Setting a reactive local state with `ref()`
+
+`ref()` is a function that accepts a single input parameter as the reactive data's initial value and returns a reference object for the created reactive data state. We call this reference object a ref object.
+
+To start using ref(), you first need to import it from the vue package. For example, we can create a reactive data called isLightOn, which accepts false as its initial value as follows:
+
+```vue
+<script setup>
+import { ref } from 'vue';
+const isLightOn = ref(false);
+const toggle = () => {
+  console.log(isLightOn.value)
+};
+</script>
+
+<template>
+  <div>Light status: {{ isLightOn }}</div>
+</template>
+```
+
+`ref()` is generally sufficient to create a reactive state for any data types, including primitive (`boolean`, `number`, `string`, and so on) and object types.
+
+However, for an object type, using `ref()` means that Vue will make the desired data object and its nested properties reactive and mutable.
+
+Unfortunately, this mechanism of making the object and its nested properties reactive can lead to unwanted bugs and potential performance issues, especially for reactive objects with a complex hierarchy of nested properties.
+
+In a scenario in which you only want to modify the whole object's value (replacing it with a new object) but not its nested properties, we suggest you use `shallowRef()`.
+
+In a scenario in which you only need to modify the object's nested properties (such as elements of an array object and each element's fields), you should use `reactive()` instead.
+
+### Setting a reactive local state with `reactive()`
+
+Like `ref()`, the `reactive()` function returns a reference to a reactive object based on the initial value passed to it. Unlike `ref()`, `reactive()` only accepts object-type input parameters and returns a reference object whose value can be accessed directly without needing a `.value` field.
+
+```vue
+<script setup>
+import { reactive } from "vue";
+const newBook = reactive({
+  title: "",
+  price: 0,
+  currency: "USD",
+  description: "",
+});
+const books = reactive([]);
+</script>
+
+<template>
+  <fieldset :style="{ display: 'flex', flexDirection: 'column'}">
+    <label>
+      Title:
+      <input v-model="newBook.title" />
+    </label>
+    <label>
+      Price:
+      <input v-model.number="newBook.price" />
+    </label>
+    <label>
+      Currency:
+      <input v-model="newBook.currency" />
+    </label>
+    <label>
+      Description:
+      <input v-model="newBook.description" />
+    </label>
+    <button @click="addBook">Add</button>
+  </fieldset>
+</template>
+```
+
+```js
+const addBook = () => {
+  books.push({
+    ...newBook,
+  });
+  newBook.title = "";
+  newBook.price = 0;
+  newBook.currency = "USD";
+  newBook.description = "";
+};
+```
+
+Note that here, we don't push `newBook` directly to `books` but rather clone its properties to the new object using the spread literal, `…`, instead. `reactive()` only creates a proxy version of the original object passed to it. Hence, if you don't clone newBook before adding it to books, any changes made to its properties later will also be reflected in the element added to the books list.
+
+You can also use `shallowReactive()` to limit the reactivity mechanism to apply only to the root's properties and not their descendants.
+
+### Computing a reactive state from another local state with `computed()`
+
+Like computed() in the Options API, computed() is for creating new reactive data based on other reactive data for a component. It accepts a function that returns the reactive data value as its first parameter. It will return a read-only and cached reference object:
+
+```vue
+<script setup>
+import { computed } from 'vue'
+const computedData = computed(() => { /* … */ })
+</script>
+```
+
+You can also make the computed data writable by passing an object with a setter and getter to `computed()` instead of a function. However, **we do not recommend doing so** as general good Vue practice.
+
+### Using watchers with `watch()`
+
+`const watcher = watch(source, handler, options)`
+
+`watch()` accepts three parameters, including the following:
+
+- `source` as a single target data object or getter function (which returns the data's value) to watch, or an array of targets.
+- `handler` is the function that Vue executes whenever source changes. The handler function receives `newValue` and `oldValue` as its source's next value and previous value respectively. It also accepts the third argument as its side-effect cleanup method. Vue will trigger this clean-up function before the next handler is invoked - if any are.
+- `options` are the additional configurations for the watcher, including the following:
+  - Two `boolean` flags: `deep` (whether Vue should watch over the nested properties of the source) and `immediate` (whether to invoke the handler immediately after the component is mounted).
+  - `flush` as the execution order for the handler (`pre`, `post`, or `sync`). By default, Vue executes the handler in the `pre` order (before updating).
+  - Two debugging callbacks, `onTrack` and `onTrigger`, for development mode.
+
+```js
+import { ref, watch } from 'vue';
+const searchTerm = ref('');
+const searchTermWatcher = watch(
+  searchTerm,
+  (newValue, oldValue) => console.log(
+    `Search term changed from ${oldValue} to ${newValue}`
+  )
+);
+```
+
+Unlike the watch property from the Options API, the `watch()` method returns a stopper function to stop the watcher whenever you no longer need to observe the target data. Also, in a scenario in which you explicitly wish to watch a nested data property, you can define the target source as a getter function that returns that specific data property.
+
+### Understanding composable lifecycle functions
+
+- `onBeforeMount()`: Before the first render of the component
+- `onMounted()`: After rendering and mounting the component to the DOM
+- `onBeforeUpdate()`: After starting the component's update process, but before the actual rendering of the updated component
+- `onUpdated()`: After rendering the updated component
+- `onBeforeMount()`: Before the process of unmounting the component starts
+- `onUnmounted()`: After the component's instance has been destroyed
+
+Since we use `setup()` or `<script setup>` to define the component's data and internal logic in combination with other Composition API, there is no need for equivalent versions of `created()` and `beforeCreate()` from the Options API.
+
+### Creating your composable (custom hook)
+
+In many scenarios, we want to group some components’ logic into reusable code blocks for other components that share similar functionalities. *In Vue 2.x, we use mixins to achieve this goal.* However, mixins are not the best practical solution, and they can create code complexity due to the order of merging and invoking overlapping data and lifecycle hooks.
+
+Starting from Vue 3.0, you can use the Composition API to divide the common data logic into small and isolated composables, using them to create a scoped data control in different components and return the created data if there is any.
+
+```js
+// src/composables/useMessages.ts
+import { ref } from 'vue'
+export const useMessages = () => {
+  const messages = ref([
+   "Apex Legends",
+   "A Plague Tale: Innocence",
+   "ART SQOOL",
+   "Baba Is You",
+   "Devil May Cry 5",
+   "The Division 2",
+   "Hypnospace Outlaw",
+   "Katana ZERO",
+  ]);
+  const deleteMessage = (value) => {
+   messages.value = messages.value.filter((item) => item
+     !== value);
+  };
+  const addMessage = (value) => {
+   messages.value.push(value)
+  }
+  return { messages, deleteMessage, addMessage }
+}
+
+// To use useMessages() in your component, you can import it into the component’s <script setup> section,
+
+<script setup>
+import { useMessages } from '@/composables/useMyComposable'
+const { messages, deleteMessage, addMessage } = useMessages ()
 </script>
 ```
