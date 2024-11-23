@@ -1073,7 +1073,7 @@ Since we use `setup()` or `<script setup>` to define the component's data and in
 
 ### Creating your composable (custom hook)
 
-In many scenarios, we want to group some components’ logic into reusable code blocks for other components that share similar functionalities. *In Vue 2.x, we use mixins to achieve this goal.* However, mixins are not the best practical solution, and they can create code complexity due to the order of merging and invoking overlapping data and lifecycle hooks.
+In many scenarios, we want to group some components' logic into reusable code blocks for other components that share similar functionalities. *In Vue 2.x, we use mixins to achieve this goal.* However, mixins are not the best practical solution, and they can create code complexity due to the order of merging and invoking overlapping data and lifecycle hooks.
 
 Starting from Vue 3.0, you can use the Composition API to divide the common data logic into small and isolated composables, using them to create a scoped data control in different components and return the created data if there is any.
 
@@ -1101,10 +1101,108 @@ export const useMessages = () => {
   return { messages, deleteMessage, addMessage }
 }
 
-// To use useMessages() in your component, you can import it into the component’s <script setup> section,
+// To use useMessages() in your component, you can import it into the component's <script setup> section,
 
 <script setup>
 import { useMessages } from '@/composables/useMyComposable'
 const { messages, deleteMessage, addMessage } = useMessages ()
 </script>
 ```
+
+## Ch 06. Global Component Composition
+
+### Understanding mixins
+
+With mixins, we can add additional methods, data properties, and life cycle methods to a component's option object. In the following example, we first define a mixin that contains a greet method and a greeting data field:
+
+```js
+/** greeter.js */
+export default {
+  methods: {
+    greet(name) {
+        return `${this.greeting}, ${name}!`;
+    }
+  },
+  data() {
+    return {
+      greeting: 'Hello'
+    }
+  }
+}
+```
+
+Then we can use the `greeter` mixin by importing and assigning it as part of the mixins field in the component's option object, as follows:
+
+```vue
+<script>
+import greeter from './mixins/greeter.js'
+export default {
+  mixins: [greeter]
+}
+</script>
+```
+
+`mixins` is an array that accepts any mixin as its element, while a `mixin` is in fact a component's option object. Mixins allow multiple components to share common data and logic definitions independently.
+
+When there is an overlapping of naming data properties or methods, Vue will prioritize the component's own options. However, this mechanism doesn't apply to life cycle hooks. The hooks defined in the mixins will take priority in execution, and Vue always triggers the component's hooks last.
+
+Due to the mechanism of data overriding and executing for hooks, mixins can lead to potential bugs and unwanted behaviors in a large code base. *Thus, we recommend considering creating shared logic and data as composable with Composition API whenever possible instead.*
+
+### Understanding plugins
+
+Vue plugins are a way to add custom functionality to Vue.js globally. Classic examples of plugin candidates are translation/internationalization libraries (such as `i18n-next`) and HTTP clients (such as the `axios`, `fetch`, and `GraphQL` clients).
+
+A Vue plugin is an object that exposes an `install` method. The `install` function is called with an `app` instance and `options`:
+
+```js
+const plugin = {
+  install(app, options) {}
+}
+```
+
+Within the `install` method, we can register directives and components and add global and instance properties and methods:
+
+```js
+const plugin = {
+  install(app, options) {
+    app.directive('fade', { bind() {} })
+    app.component(/* Register component globally */)
+    app.provide(/* Provide a resource to be injectable */)
+    app.config.globalProperties.$globalValue = 'very-global-value'
+  }
+}
+```
+
+We can register a plugin using the `use` instance method, as follows:
+
+```js
+import plugin from './plugin'
+const app = createApp(/*…*/)
+app.use(plugin)
+```
+
+### Globally registering components
+
+A reason for using plugins is to reduce boilerplate in all Vue application files by removing imports and replacing it with access to this. Much for the same reasons as we define global methods and properties, we might want to register components globally.
+
+```vue
+/** CustomButton.vue */
+<template>
+  <button @click="$emit('click', $event)">
+    <slot />
+  </button>
+</template>
+```
+
+```js
+/** main.js */
+import CustomButton from './components/CustomButton.vue'
+app.component('CustomButton', CustomButton)
+```
+
+### Using non-SFC Vue components
+
+- Runtime definition with a string template
+- `render` function
+- JSX
+- Components: `<component :is="componentName" />`
