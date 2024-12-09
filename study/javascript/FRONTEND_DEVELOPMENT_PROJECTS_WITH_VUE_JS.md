@@ -1206,3 +1206,154 @@ app.component('CustomButton', CustomButton)
 - `render` function
 - JSX
 - Components: `<component :is="componentName" />`
+
+## Ch 07. Routing
+
+`Vue Router` is the official router service for any Vue.js application.
+
+### Exploring the `RouterView` element
+
+`RouterView` is a Vue component whose job is to do the following:
+
+- Render different child components
+- Mount and unmount itself automatically at any nesting level, depending on the route's given path
+
+### Passing props to view
+
+Since `RouterView` is a component, it can also receive props. The only prop it receives is `name`, which is the same name registered in the corresponding route's record defined in the `router` object at the initialization phase.
+
+The Vue engine automatically passes any other additional HTML attributes to any view component that RouterView renders.
+
+Take the following `RouterView` component with a `main-app-view` class, for instance:
+
+`<RouterView class="main-app-view"/>`
+
+Let's say we have a view component's template with the following code:
+
+```vue
+<template>
+  <div>Hello World</div>
+</template>
+```
+
+In this case, the child component will receive the `main-app-view` attribute class when it's the active view. The actual output after rendering will be as follows:
+
+`<div class="main-app-view">Hello World</div>`
+
+### Setting up Vue Router
+
+In the `src/main.js` file, we import the defined configuration object and uses the Vue instance method `use()` to install the router system into the application, as seen in the following code:
+
+```js
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+app.use(router)
+```
+
+After executing `app.use(router)`, the following objects are available for access in any component:
+
+- `this.$router`: The global router object
+- `this.$route`: The current route object points to the element in context
+
+If you are using `setup()` and Composition API (or `<script setup>`), you can import `useRoute()` and `useRouter()` functions from `vue-router` package and get the current route object (instead of `this.$route`), and global router object (instead of `this.$router`) respectively.
+
+```vue
+<script setup>
+import { useRoute, useRouter } from 'vue-router'
+const route = useRoute();
+const router = useRouter();
+// component's logic…
+</script>
+```
+
+### Defining the routes
+
+```js
+const routes = [
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView
+  },
+]
+```
+
+The `path` property is a required string that indicates the path of the targeted route. Vue Router resolves this property to an absolute URL path for the browser's navigation.
+
+The next property is `name`, a string indicating the name given to the targeted route. Even though it is optional, we recommend defining every path with a name for better code maintenance and route tracking purposes.
+
+### Tips on loading components for route configuration
+
+**Lazy loading**, also known as on-demand loading, is a technique that aims to optimize the content of a website or web application at runtime. It helps to reduce the time consumption and number of resources required to download an application on the first load.
+
+Instead of importing the `AboutView` component into the top of the file, as we did with `HomeView`, we can dynamically add the following right after defining the name of the about route instead:
+
+`component: () => import('../views/AboutView.vue')`
+
+In most cases, since the user will likely land on the default path on the first go, it is better not to lazy-load the default component (`HomeView` in our app) but to import it in the usual way.
+
+### Setting up the `router` instance
+
+After defining the `routes`, the final step is to create the `router` instance based on the given configuration options by using the `createRouter` method, as shown here:
+
+```js
+import { createRouter, createWebHistory } from 'vue-router'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes
+})
+```
+
+#### `routes`
+
+`routes` is a required option. Without this, the router won't be able to recognize the paths and direct users to the suitable view content accordingly.
+
+#### `history`
+
+`history` determines the router's mode. There are two modes in Vue Router for URLs:
+
+- HTML History mode: You can use the `createWebHistory()` method to leverage the default `history.pushState()` API, as well as the HTML5 History API. It allows us to achieve URL navigation without a page reload and makes the URL path human-readable - for example, `yourapplication.com/about`.
+- Hash mode: You can use the `createWebHashHistory()` method to create a hash mode, which allows you to use a hash symbol (#) to simulate a URL - for example, `yourapplication.com/#about` for an About page or `youapplication.com/#/` for the Home URL of your application.
+
+#### `base`
+
+`base` determines the base URL for the app. For example, when we set it to `process.env.BASE_URL`, it allows developers to control the base URL from outside the application code, specifically from a `.env` file.
+
+### Setting up navigation links with `RouterLink`
+
+Since we are using the web history mode with `createWebHistory()`, the to prop of each `RouterLink` should receive an identical value with the path property declared in the targeted route object.
+
+Since we name our routes, an alternative way of using the to prop is to bind it with an object containing the route name instead of the path. Using the name is highly recommended to avoid complex link refactoring when we need to adjust the paths given to certain routes in our app.
+
+```vue
+<template>
+  <nav>
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/about">About</RouterLink>
+  </nav>
+</template>
+```
+
+### Tip for implementing the Back button
+
+Sometimes, we want to navigate back to the previous page. Using `this.$router.push()` can achieve this, but it adds more routes in the history stack instead of going back. The correct technique is to use `this.$router.go(steps)`, in which steps is an integer that indicates the number of steps to go back or forward in the history stack. This functionality works similarly to `window.history.go(steps)`.
+
+```js
+this.$router.go(-1) // similar to window.history.back() - go back one page
+```
+
+Alternatively, we can rewrite the above code using `useRouter()` and `<script setup>`, as follows:
+
+```vue
+<script setup>
+import { useRouter } from 'vue-router'
+const router = useRouter();
+
+router.go(1); //forward one page
+router.go(-1); //back one page
+</script>
+```
