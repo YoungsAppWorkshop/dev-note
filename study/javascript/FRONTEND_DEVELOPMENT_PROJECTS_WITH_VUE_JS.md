@@ -1357,3 +1357,124 @@ router.go(1); //forward one page
 router.go(-1); //back one page
 </script>
 ```
+
+## Ch 09. The State of Vue State Management
+
+### Understanding the component architecture and the problem of the state
+
+In previous chapters, we have seen how to use a local state and props to hold the state and share it in a parent-child component hierarchy.
+
+Now, we will begin by showing how to leverage `state`, `props`, and `events` to share states between components that do not have a **parent-child** configuration. These types of components are called **siblings**.
+
+### Holding the state in a common ancestor component
+
+To only hold the state with the `state` component and `props`, and update it with `events`, we will store it in the nearest common ancestor component. `state` is only propagated through `props` and is only updated through `events`.
+
+![Fig 9.2](./imgs/fig_9_2.png)
+
+In this case, all the `state` components will live in a shared ancestor of the components that require them. The `App` component, since it is the `root` component, is a good default for holding a shared state.
+
+![Fig 9.3](./imgs/fig_9_3.png)
+
+To change `state`, a component needs to emit `events` up to the component holding our `state` (the shared ancestor). The shared ancestor needs to update `state` according to the data and type of `events`. This, in turn, causes a re-render, during which the ancestor component passes the updated `props` to the component reading `state`.
+
+![Fig 9.4](./imgs/fig_9_4.png)
+
+```vue
+/* App.vue */
+<script setup>
+import AppHeader from '@/components/AppHeader.vue'
+import AppProfileDisplay from '@/components/AppProfileDisplay.vue'
+import AppProfileForm from '@/components/AppProfileForm.vue'
+
+import { reactive } from 'vue'
+
+const formData = reactive({name:'', occupation:''});
+
+function update(e) {
+  formData.name = e.name;
+  formData.occupation = e.occupation;
+}
+</script>
+
+<template>
+  <div id="app">
+    <AppHeader/>
+    <div class="flex flex-col md:flex-row">
+      <AppProfileForm @submit="update($event)" />
+      <AppProfileDisplay :form-data="formData" />
+    </div>
+  </div>
+</template>
+
+/* AppProfileForm.vue */
+<script setup>
+import { ref } from 'vue'
+const emit = defineEmits(['submit'])
+
+const name = ref('');
+const occupation = ref('');
+
+function submitForm() {
+  emit('submit', {
+    name: this.name,
+    occupation: this.occupation
+  });
+}
+</script>
+
+<template>
+  <section class="md:w-2/3 flex flex-col p-12 items-center">
+  <!-- Inputs -->
+    <div class="flex flex-col">
+      <label class="flex text-gray-800 mb-2" for="name">Name
+      </label>
+      <input
+        id="name"
+        type="text"
+        name="name"
+        class="border-2 border-solid border-blue-200 rounded px-2 py-1"
+        v-model="name"
+      />
+    </div>
+
+    <div class="flex flex-col mt-2">
+      <label class="flex text-gray-800 mb-2" for="occupation">Occupation</label>
+      <input
+        id="occupation"
+        type="text"
+        name="occupation"
+        v-model="occupation"
+        class="border-2 border-solid border-blue-200 rounded
+          px-2 py-1"
+      />
+    </div>
+
+    <div class="flex flex-row mt-12">
+      <button type="submit" @click="submitForm()">Submit</button>
+    </div>
+
+  </section>
+</template>
+
+/* AppProfileDisplay.vue */
+<script setup>
+const props = defineProps({formData:Object});
+</script>
+
+<template>
+  <section class="md:w-1/3 flex flex-col p-12">
+  <!-- Profile Card -->
+  <h3 class="font-bold font-lg">{{ formData.name }}</h3>
+  <p class="mt-2">{{ formData.occupation }}</p>
+  </section>
+</template>
+```
+
+### Deciding when to use a local state or global state
+
+A good rule of thumb is that *if a prop is passed through a depth of three components*, it is probably best to put that piece of state in a global state and access it that way.
+
+The second way to decide whether something is local or global is to ask the question *when the page reloads, does the user expect this information to persist?*
+
+Another key idea to bear in mind is that it is very much possible to mix global states and local states in a component.
