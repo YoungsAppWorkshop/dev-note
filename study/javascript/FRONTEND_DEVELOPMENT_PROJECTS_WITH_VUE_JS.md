@@ -1478,3 +1478,62 @@ A good rule of thumb is that *if a prop is passed through a depth of three compo
 The second way to decide whether something is local or global is to ask the question *when the page reloads, does the user expect this information to persist?*
 
 Another key idea to bear in mind is that it is very much possible to mix global states and local states in a component.
+
+## Ch 10. State Management with Pinia
+
+### What Pinia is
+
+[Pinia](https://pinia.vuejs.org) is a state management library for Vue.js applications. Pinia is now the recommended state management library for Vue applications.
+
+- Devtools support via the Vue extension. This extension supports Chrome, Edge, and Firefox. There’s also a standalone Electron desktop application.
+- Hot Module Replacement (HMR), which lets you edit your store and update it in your development environment without needing to reload the entire web page.
+- Optional TypeScript support.
+- Server-Side Rendering (SSR) support.
+- Plugins to extend Pinia’s functionality.
+
+At a high level, a **store** is the combination of the data and logic that needs to be shared throughout an application. The **state** of a Pinia application is the data of your application’s store. Pinia provides APIs to both read and write to this data. **Getters** act much like virtual properties in Vue applications. **Actions** let you define custom logic for a store – for example, using an AJAX call to validate changes to data before they are committed.
+
+### Using Pinia to create a store
+
+Let’s start using Pinia by demonstrating how to define a store within it and then use the state data in an application:
+
+```js
+// src/stores/counter.js
+import { defineStore } from 'pinia'
+export const useCounterStore = defineStore({
+  id: 'counter',
+  state: () => ({
+    counter: 1
+  }),
+  getters: {
+    doubleCount: (state) => state.counter * 2
+  },
+  actions: {
+    increment() {
+      this.counter++
+    }
+  }
+})
+```
+
+```vue
+<script setup>
+// App.vue
+import { useCounterStore } from './stores/counter'
+const store = useCounterStore()
+</script>
+
+<template>
+  <p>
+  Counter: {{ store.counter }}
+  </p>
+</template>
+```
+
+### Adding and using getters in your Pinia store
+
+As stated earlier, getters in Pinia act just like computed properties. The `doubleCount` getter simply takes the current value of counter and returns the double of it.
+
+### Working with Pinia actions
+
+Actions are the Pinia equivalent of component methods. They let you define custom logic for a store and can be asynchronous as well.
