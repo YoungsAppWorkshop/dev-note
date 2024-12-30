@@ -2,7 +2,7 @@
 
 ## Ch 1. What is React Native?
 
-A `prop` is a parameter that is transferred from a parent component to a child component. What makes React so efficient is the fact that any time the value of a prop changes, only those components that are affected by that change are rerendered. This massively reduces the rerendering costs, especially for large applications with many layers.
+A `prop` is a parameter that is transferred from a parent component to a child component. What makes React so efficient is the fact that any time the value of a `prop` changes, only those components that are affected by that change are rerendered. This massively reduces the rerendering costs, especially for large applications with many layers.
 
 React Native is a framework that makes it possible to write React code and deploy it to multiple platforms. The most well known are iOS and Android, but you can use React Native to create apps for Windows, macOS, Oculus, Linux, tvOS, and much more. With React Native for Web, you can even deploy a mobile application as a web app using the same code.
 
@@ -137,3 +137,11 @@ const libraryFunctionPromise = new Promise((resolve, reject) => {
   libraryFunction(resolve, reject);
 }
 ```
+
+## Ch 3. Hello React Native
+
+One of the best things about React Native is that it is very flexible when it comes to how you use it.
+
+1. You can choose Expo, which handles all the native part for you and allows you to complete your first app in hours. It also makes it possible to build iOS apps without having a Mac.
+2. But you also can go with a bare React Native workflow, which gives you a lot of options in terms of how you integrate your React Native app into your whole development landscape.
+3. You can also integrate or even write your own (native) libraries.
