@@ -1,6 +1,5 @@
 # Chapter 1. Intro to Design Patterns: Welcome to Design Patterns
 
-
 Someone has already solved your problems.
 Instead of code reuse, with patterns you get experience reuse.
 
