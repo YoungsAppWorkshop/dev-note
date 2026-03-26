@@ -52,3 +52,46 @@ Structural patterns focus on composition, or how classes and objects are compose
 - **Façade**: Provide a unified interface to a set of interfaces in a subsystem. Facade defines a high-level interface that makes the subsystem easier to use.
 - **Flyweight**: Shares common data between similar objects to limit memory usage and increase performance.
 - **Service Locator**: Provide a global access point for services without coupling client code to the concrete service classes.
+
+## Ch 02. Managing Access with the Singleton Pattern
+
+First, it’s important to recognize scenarios where the Singleton pattern is useful and doesn’t just add unnecessary complexity to your code. The original Gang of Four text says you should consider using the Singleton pattern when:
+
+> You need to limit a class to a single instance and have that unique instance be accessible to clients through a global access point.
+
+A global variable can take care of the accessibility, and in the case of `C#`, a static variable fits the bill nicely. When you put it all together, a singleton class is responsible for initializing, storing, and returning its own unique instance, as well as protecting against duplicate instance requests.
+
+![Singleton pattern](./imgs/ch02-01.png)
+
+In Unity, there are two additional features to a singleton class:
+
+- First, the singleton is responsible for destroying any GameObject with a duplicate singleton class script component.
+- Second, the singleton is responsible for keeping itself active through the full application lifecycle.
+
+![Singleton pattern](./imgs/ch02-02.png)
+
+![Singleton pattern UML Diagram](./imgs/ch02-03.png)
+> UML Diagram: Singleton pattern
+
+### Pros & Cons of Singleton pattern
+
+Pros:
+
+- It saves resources by only initializing itself when first asked, which means we won’t have an unused singleton taking up our valuable memory.
+- It is initialized at runtime and has access to information only available after the game is running.
+
+Cons:
+
+- Increased coupling between classes is generally not a good outcome in programming.
+- Unit testing can become very difficult when dependencies are everywhere.
+
+Either:
+
+- Global access is a double-edged sword.
+- Global state doesn’t play well with concurrency.
+
+### Singleton Pattern Summary
+
+Keep in mind that your singleton classes are most useful when you only want a single class instance, a global point of access, and persistence throughout the Unity game lifecycle. You have the choice of lazily instantiating your singleton objects, which helps with accessing information your project may only have after compiling (not to mention the singleton itself won’t be created until it’s needed). You can also go for a generic solution, which can be a subclass or even a `ScriptableObject`!
+
+However, it’s important to remember that any globally accessible objects can have adverse effects if you’re not careful. They can lead to increased coupling between classes, difficulty tracking down global state bugs, and inefficient unit testing. Globally accessible state is also not thread-safe, but we’ve covered how to add thread-locking code to your singleton to address threading issues.
