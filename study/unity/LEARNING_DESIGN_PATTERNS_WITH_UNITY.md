@@ -95,3 +95,40 @@ Either:
 Keep in mind that your singleton classes are most useful when you only want a single class instance, a global point of access, and persistence throughout the Unity game lifecycle. You have the choice of lazily instantiating your singleton objects, which helps with accessing information your project may only have after compiling (not to mention the singleton itself won’t be created until it’s needed). You can also go for a generic solution, which can be a subclass or even a `ScriptableObject`!
 
 However, it’s important to remember that any globally accessible objects can have adverse effects if you’re not careful. They can lead to increased coupling between classes, difficulty tracking down global state bugs, and inefficient unit testing. Globally accessible state is also not thread-safe, but we’ve covered how to add thread-locking code to your singleton to address threading issues.
+
+## Ch 03. Spawning Enemies with the Prototype Pattern
+
+As part of the creational family of design patterns, the Prototype pattern gives us control over how we make copies of common base objects, making it effective when:
+
+- A system needs to be independent of how its objects are created, composed, and represented.
+- The objects you’re creating need to be specified at runtime.
+- You want to avoid parallel class hierarchies of factories and objects.
+- You want to specify the kind of objects you’re creating by defining a prototypical instance and copying it.
+
+![Prototype pattern](./imgs/ch03-01.png)
+
+The Prototype pattern has three main components:
+
+- **The Prototype** interface, enabling objects to copy themselves
+- **The Concrete Prototypes** that implement the self-cloning logic
+- **The Client**, which creates new objects by asking prototypes for clones of themselves
+
+![Prototype pattern](./imgs/ch03-02.png)
+
+We’ll also be using an optional variation called a **Prototype Factory** class, which stores a single instance of each prototypical object we want to clone.
+
+![Prototype pattern](./imgs/ch03-03.png)
+
+### Pros & Cons of Prototype pattern
+
+Pros:
+
+- Bulit-in initialization overhead and memory management
+- Easy adding and removing of new prototypical objects at runtime
+- Ability to create new objects with different values and structures from the same prototypical objects
+- Safer self-duplication
+
+Cons:
+
+- Be mindful of the internal structures of your prototypical objects
+- Destroying the prototypical object instance before making a copy will not increase your memory efficiency. This type of workflow is common when using the Prototype pattern with **Object Pooling** and can lead to unwanted race conditions.
