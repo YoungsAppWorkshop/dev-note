@@ -132,3 +132,86 @@ Cons:
 
 - Be mindful of the internal structures of your prototypical objects
 - Destroying the prototypical object instance before making a copy will not increase your memory efficiency. This type of workflow is common when using the Prototype pattern with **Object Pooling** and can lead to unwanted race conditions.
+
+## Ch 04. Creating Items with the Factory Method Pattern
+
+In this chapter, we’ll learn how the Factory Method pattern not only lets you specify a common interface for any objects you’re creating but also lets the subclass decide the actual class being instantiated.
+
+Before we dive in any further, we should talk about two design patterns related to factories: the **Factory Method** and **Abstract Factory patterns**. The Factory Method pattern allows you to make objects without specifying the exact class being instantiated, while the Abstract Factory pattern combines groups of related factories without specifying the concrete factory classes that are rolling out the items.
+
+How to choose between these two patterns is a question of categories and scale (and you should absolutely ask yourself these questions). How many kinds of items do you need? Can they be grouped into families of related products? Will composition work better than inheritance for your scenario, or vice versa?
+
+In this chapter, we’ll focus on using a factory with a small variety of items to:
+
+- Create a product interface and concrete products
+- Build different creator class and factory method variations
+- Scale factories with reflection and LINQ
+- Integrate Unity prefabs in to product and creator classes
+
+### Breaking down the Factory Method pattern
+
+The Factory Method pattern gives us the power to create objects through an interface without having to specify the exact class that’s getting instantiated. The Factory Method pattern is useful when:
+
+- Your class can’t specify the class objects it’s required to create.
+- Your class needs its subclasses to determine the objects it’s required to create.
+- You need a common method or operation among all objects for instantiation.
+
+![Factory Method Pattern](./imgs/ch04-01.png)
+
+The main takeaway for this pattern is deferment – we can have as many different objects as we want, but if they all implement the common interface, we can treat them the same in our client code. This is extremely useful when you’re creating more complex objects, especially in games, where you want the actual instantiation logic hidden in a black box with only the common methods exposed (those common methods are called the factory methods, which is where the pattern gets its name from).
+
+### Diagramming the Factory Method pattern
+
+![Factory Method Pattern](./imgs/ch04-02.png)
+
+Figure shows the structure of the Factory Method pattern, which has four components:
+
+- **The Product interface** for all objects our factory method can create.
+- **Concrete Products** that implement the Product interface.
+- **An abstract Creator class**, which declares the factory method and returns a Product object. This class can also provide default factory method logic that returns a default Product object.
+- **A Concrete Creator class** that subclasses the Creator and overrides the factory method to return specific Concrete Product instances.
+
+In cases where a parallel class hierarchy would create too much overhead every time a new product is added to the game, it’s useful to understand the different variations of the Factory Method pattern:
+
+- A Concrete Creator class can be declared without a parent class and simply have default factory methods for each of its products. *This is only scalable and flexible if there is a set number of products or product tiers.*
+- A Concrete Creator class can be declared with a factory method that takes in an argument specifying the product you want to be returned. *This is the most common variation, but it can quickly get out of hand when scaling products.* We’ll talk more about maximizing scalability and efficient maintenance with reflection in the Scaling factories with reflection and LINQ section.
+
+### Pros & Cons of Factory Method pattern
+
+Pros:
+
+- No more binding specific classes in your client code; everything goes through the Product interface. Adding new products is as easy as implementing the Product interface.
+- Black-boxing object creation into product subclasses keeps everything together but hidden. This is especially flexible and scalable when you’re creating complex objects and need to expand a factory’s duties.
+
+Cons:
+
+- Extra code means extra time spent handling your product and factory relationships, which is why we’ll spend considerable time in this chapter talking about the three variations this pattern offers to remove some of that extra abstraction overhead. Choosing the right type of product-to-factory relationship is essential to making this pattern work for you.
+- The Factory Method isn’t the Abstract Factory – these are different patterns, and they have different implementations, pros, and pitfalls. The Factory Method lets you make objects without specifying the class being instantiated, while the Abstract Factory pattern combines groups of related factories without specifying concrete factory classes. Ask yourself what the end goal is and then choose between the two patterns rather than trying to create a Frankenstein’s monster of both.
+
+### Working with different factory class variations
+
+There are three variations of factory classes in the Factory pattern:
+
+- The common Abstract/Concrete parallel factory structure
+- The Concrete-only factory structure
+- The Parameterized factory
+
+#### Abstract/Concrete parallel factory structure
+
+A parallel class hierarchy between products and factories doesn’t necessarily scale well, but it’s effective when you have a preset number of products in your game that aren’t likely to change.
+
+#### Concrete-only factory structure
+
+The concrete factory class variation lets you declare factory methods with default implementations, while still being able to override them in subclasses if necessary. The concrete parent factory is also a good choice when you have a set way of creating products.
+
+A classic example is programmatically creating a maze with set products like walls, rooms, and doors in a static configuration but with interchangeable products.
+
+#### Parameterized factory
+
+What if our game needs factories that can build a growing set of products? Luckily, there’s a variation of the factory pattern called a parameterized factory, where we store products by key and simply request the item we want.
+
+#### Scaling factories with reflection and LINQ
+
+Using a parameterized factory class can quickly become a spaghetti nightmare of monstrous switch statements and unmanageable code if items are being added or updated at a fast pace.
+
+Luckily, C# has a System.Reflection namespace that can tell you about all the classes, interfaces, and value types your project has by looking through the project’s assembly. In addition to reflection, we’ll be using the LINQ API, which stands for Language Integrated Query.
