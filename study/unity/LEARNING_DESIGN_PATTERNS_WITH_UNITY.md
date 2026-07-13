@@ -215,3 +215,49 @@ What if our game needs factories that can build a growing set of products? Lucki
 Using a parameterized factory class can quickly become a spaghetti nightmare of monstrous switch statements and unmanageable code if items are being added or updated at a fast pace.
 
 Luckily, C# has a System.Reflection namespace that can tell you about all the classes, interfaces, and value types your project has by looking through the project’s assembly. In addition to reflection, we’ll be using the LINQ API, which stands for Language Integrated Query.
+
+## Ch 05. Building a Crafting System with the Abstract Factory Pattern
+
+### Breaking down the Abstract Factory pattern
+
+The Abstract Factory pattern is all about using a common interface to create families of related or dependent products without knowing the concrete classes of the products being created. You’ll find this pattern is most useful in scenarios where:
+
+- You need a product creation system that’s decoupled from how the products are created or assembled.
+- Your creation system can be configured with a variety of product families.
+- You need to explicitly constrain a family of related products designed to work together.
+- You need a collection of products but only want the system to know about their interfaces instead of detailed implementation.
+
+![Abstract Factory Pattern](./imgs/ch05-01.png)
+![Abstract Factory Pattern](./imgs/ch05-02.png)
+
+Like the Factory Method pattern, each product in this example implements a common interface (i.e., Input Controls and Save/Load, as you can see in the preceding figure), while each factory also implements a set of common interfaces for creating and interacting with those products. The main difference is that the Abstract Factory pattern handles families of related or dependent products with an added layer of abstraction.
+
+### Diagramming the pattern
+
+![Abstract Factory Pattern](./imgs/ch05-03.png)
+
+Figure 5.3 shows the UML structure for the Abstract Factory pattern and the interactions of its five component parts:
+
+- The **Abstract Product** defines the interface for each type of product, related or dependent.
+- Each **Concrete Product** implements the Abstract Product interface and defines a type of product that can be created by its corresponding Concrete Factory.
+- The **Abstract Factory** defines an interface for creating abstract products.
+- Each **Concrete Factory** implements the Abstract Factory interface and creates a designated family of products.
+- The **Client** only works with the Abstract Factory and Abstract Product interfaces, hiding all implementation logic.
+
+When you’re trying to choose which pattern fits your problem best (between the Factory Method and Abstract Factory choices), it’s important to remember the following:
+
+- The **Factory Method** pattern encapsulates, or hides, the construction code for specific objects.
+- The **Abstract Factory** pattern encapsulates the construction of groups of objects, usually referred to as object families. These objects are always related, but they can also be dependent on, and interact with, each other.
+
+### Pros and Cons of the Abstract Factory Pattern
+
+Pros:
+
+- Concrete class creation is kept separate from your implementation code, meaning you can control the kinds of objects that are being instantiated in your project. This separation also means client code is never aware of the concrete product classes, only their exposed interfaces.
+- Switching entire product families is easy – simply changing the Concrete Factory being used gives you an entirely new set of products to configure and spit out.
+- Enforcing consistency between products in the same family is built-in – they can work together efficiently, and you can keep track of which products aren’t meant to be interacting by keeping them in separate product families.
+
+Cons:
+
+- Adding new products can be time consuming because Abstract Factory patterns usually have a fixed list of products they can create.
+- The Abstract Factory isn’t the Factory Method – these are different patterns, and have different implementations, pros, and pitfalls.
