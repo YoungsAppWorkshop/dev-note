@@ -232,7 +232,7 @@ The Abstract Factory pattern is all about using a common interface to create fam
 
 Like the Factory Method pattern, each product in this example implements a common interface (i.e., Input Controls and Save/Load, as you can see in the preceding figure), while each factory also implements a set of common interfaces for creating and interacting with those products. The main difference is that the Abstract Factory pattern handles families of related or dependent products with an added layer of abstraction.
 
-### Diagramming the pattern
+### Diagramming the Abstract Factory pattern
 
 ![Abstract Factory Pattern](./imgs/ch05-03.png)
 
@@ -261,3 +261,54 @@ Cons:
 
 - Adding new products can be time consuming because Abstract Factory patterns usually have a fixed list of products they can create.
 - The Abstract Factory isn’t the Factory Method – these are different patterns, and have different implementations, pros, and pitfalls.
+
+## Ch 06. Assembling Support Characters with the Builder Pattern
+
+In this chapter, we’ll work on assembling complex objects while separating the actual construction process from its representation.
+
+While Prefabs are great for `static` objects, the Builder pattern really shines when you need an encapsulated construction process AND abstractions to handle individual objects and their component pieces.
+
+### Breaking down the Builder pattern
+
+As part of the Creational family of design patterns, the Builder pattern focuses on creating different representations of a complex object while delegating the customized building instructions to concrete builder classes. You’ll find this pattern is most useful in scenarios where:
+
+- You need to separate the construction of complex objects from their representations.
+- You want to build different objects using the same construction process.
+- Finer control of each step of the construction process is necessary.
+- You want to delegate creating the object to an encapsulated builder instead of directly creating them in the client.
+
+The Builder pattern example that’s familiar to most people is the assembly line – in this case, a car factory.
+
+![Builder Pattern](./imgs/ch06-01.png)
+
+In a gaming scenario, your character might have a customizable character system where they can specify the hair, eyes, facial hair, and body type of their playable avatar, and the game saves them each time as a complex object. It doesn’t matter what character class, species, or type your player is building, only the way the character is put together. Orcs, humans, wizards, and elves all presumably need a head, eyes, and a body, all with optional facial hair on request.
+
+Really, any situation where a larger complex object is composed of smaller component parts is a good candidate for the Builder pattern.
+
+### Diagramming the Builder pattern
+
+![Builder Pattern UML](./imgs/ch06-02.png)
+
+Figure 6.3 shows the UML structure of the basic Builder design pattern and the interaction of its four components:
+
+- The **Director** initiates and manages all object creation using the builder interface methods, which removes any construction logic from the client.
+- The `Builder` interface defines the common methods for building each part of the product.
+- **Concrete Builders** (or Builders) are the corresponding builder classes for each different product representation.
+- The `Product` is the base object created, which has a reference to all its component parts and can add new components.
+
+### Pros and Cons of the Builder pattern
+
+Pros:
+
+- Construction is hidden from the client. The internal build process for each object, and the type of object being built, are both separated from the client code.
+- A step-by-step construction process, which allows fine-grain control over how each part or component is built and added to the completed object.
+
+Cons:
+
+- New objects increase code complexity. Anytime you want to add a new object to the pattern, you’ll need to manually program how that object is put together.
+
+#### Customizing object components
+
+One of the main complaints about the Builder pattern is how hardcoded and static it can be, which begs the question of why we’re using it in the first place. This is especially true in Unity, as Prefabs are more UI-friendly to designers and programmers. However, that is only true if the Prefabs are themselves static and your scenarios only need to instantiate them. In those cases, the Prototype or Abstract Factory patterns would be a better fit.
+
+However, when you need to create customizable objects made of different and interchangeable parts, the Builder pattern comes in as a strong contender. I would even argue the Builder pattern is more useful in Unity in these situations, as you can build component parts out of `ScriptableObjects` or Prefabs, configure them however you want, and then assemble them into complex objects in a scene. As for scaling and flexibility, you can easily add customization parameters to your IBuilder interface methods on a component-by-component basis.
