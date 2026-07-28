@@ -312,3 +312,51 @@ Cons:
 One of the main complaints about the Builder pattern is how hardcoded and static it can be, which begs the question of why we’re using it in the first place. This is especially true in Unity, as Prefabs are more UI-friendly to designers and programmers. However, that is only true if the Prefabs are themselves static and your scenarios only need to instantiate them. In those cases, the Prototype or Abstract Factory patterns would be a better fit.
 
 However, when you need to create customizable objects made of different and interchangeable parts, the Builder pattern comes in as a strong contender. I would even argue the Builder pattern is more useful in Unity in these situations, as you can build component parts out of `ScriptableObjects` or Prefabs, configure them however you want, and then assemble them into complex objects in a scene. As for scaling and flexibility, you can easily add customization parameters to your IBuilder interface methods on a component-by-component basis.
+
+## Ch 07. Managing Performance and Memory with Object Pooling
+
+In this chapter, we’ll switch gears and focus on increasing performance and managing memory allocation when creating new objects with the Object Pool pattern. This approach is twofold; first, you get to control when batches of objects are instantiated, and second, you control how they are stored in a reusable pool that you can grab from whenever you want (without any additional CPU overhead).
+
+### Breaking down the Object Pool pattern
+
+Because the Object Pool pattern is about pooling shared objects rather than creating and destroying objects one at a time, you’ll find it most useful when:
+
+- You have objects that are instantiated and destroyed at a high rate and/or are computationally expensive to instantiate (think about how many bullets a first-person shooter has to put onscreen when you’re really in the thick of it).
+- You want to keep track of and control memory allocation when creating objects.
+- You want to improve performance by allocating and reusing objects with a predictable memory footprint and timeframe.
+
+![Object Pool Pattern](./imgs/ch07-01.png)
+
+In a program, there’s no natural limit to how many times you can use the new keyword and create a new object instance. You won’t find out anything is wrong until you run your game and either a user’s hardware can’t take it and crashes or they stop playing because it’s so unbelievably slow.
+
+Pay special attention to objects that come with resource dependencies like database connections or network sockets, which makes them costly to instantiate even once, let alone in multiples.
+
+In all cases, creating new objects will produce a significant spike in CPU usage and garbage collection, resulting in slower frame rates and possible crashes. The solution is to create a set number of objects at the beginning of your program or script (or anywhere that it won’t negatively affect the CPU), then check out objects when requested and return them when they’re no longer needed, as shown in the following figure:
+
+![Object Pool Pattern](./imgs/ch07-02.png)
+
+An Object Pool also naturally sets an upper limit on how many new objects can be created, forcing the client to wait for the next available object rather than creating new ones.
+
+### Diagramming the Object Pool pattern
+
+![Object Pool Pattern](./imgs/ch07-03.png)
+
+Figure 7.4 shows the UML structure of the basic Object Pool design pattern with its three components:
+
+- The **Client** is only concerned with the `Object Pool`, asking for a reusable object anytime it needs one.
+- The `Object Pool` then checks if one is available and returns it if there’s one free.
+  - If the list of pooled objects is empty, or all of them are in use, the `Object Pool` can create and return a new one.
+  - If all objects are in use, the client will need to wait for one to become available.
+- The reusable `Pooled Object` class holds any object methods or interaction logic.
+
+### Pros and Cons of the Object Pool pattern
+
+Pros:
+
+- **Performance boost** when the memory and resource cost of instantiating the object is pricey and the rate of creation (and destruction) is high.
+- **Predictability** when object creation depends on resources that might take a varied length of time to access.
+
+Cons:
+
+- **Stale state** happens when you don’t reset your pooled objects when returning them to the communal pool.
+- **Threading issues** can spring up if an Object Pool is being used by more than one thread, but this can be nipped in the bud by making the pool mechanics thread-safe.
