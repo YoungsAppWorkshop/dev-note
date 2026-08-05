@@ -360,3 +360,47 @@ Cons:
 
 - **Stale state** happens when you don’t reset your pooled objects when returning them to the communal pool.
 - **Threading issues** can spring up if an Object Pool is being used by more than one thread, but this can be nipped in the bud by making the pool mechanics thread-safe.
+
+## Ch 08. Binding Actions with the Command Pattern
+
+In this chapter, we’ll dive into creating actionable requests that can be customized, queued, and undone with the Command pattern. When I say *actionable requests*, what we’re really talking about are commands that come pre-packaged with all the information they need to be executed. This way, when we need the requests to do their work, they already have everything they need to get their job done!
+
+The Command pattern lets you create actions as objects, meaning you can customize them during instantiation, execute them immediately, store them for later, and even undo or redo them, which is useful when:
+
+- You want to create actions as self-contained objects with all the information needed to execute the action.
+- You want interchangeable actions that can work on any receiving object.
+- You want to store or queue sequences of actions to be triggered later.
+- You want to avoid hard-wiring requests to the client making the request.
+- You want to support undo and redo functionality.
+
+### Diagramming the Command pattern
+
+![Command Pattern](./imgs/ch08-01.png)
+
+Figure 8.3 shows the UML structure of the Command design pattern with its five components:
+
+- The **Abstract Command** class is an interface for handling operation execution
+- A **Concrete Command** is responsible for executing the command on a given receiver. Commands can either be bound to a dedicated receiver or get the receiver through the Execute method. We’ll talk more about coupled and decoupled commands in the following section, Reusable versus single-use commands.
+- The **Client** creates the actual command objects and passes them in their respective receivers. The example in this chapter uses a middle-man class called `InputListener`, which handles the input received from the player (via the keyboard) and returns a pre-bundled command to the client.
+- The **Invoker** tells the command to execute, which means we have the freedom to decide when the command is fired.
+- The **Receiver** only knows how to perform the logic behind each command, so any class can realistically be a receiver if it has the code for the corresponding command action.
+
+### Reusable versus single-use commands
+
+There are two kinds of commands you can use with the Command pattern (extremely important because they tend to get mashed together out in the wild).
+
+First, you can have reusable commands, which have no state and can be passed around at will. A common example of reusable commands would be key bindings (you know them as hotkeys).
+
+Second, you can have coupled commands, which store state information and are bound to the object receiving and performing the action. These are unique command objects, which means they can only be used once instead of being passed around at will (and are extremely loyal to their receivers). However, because they’re unique objects, they can be stored in command sequences, which means they can be undone and redone – hurray for stateful data! You’ll see RPG and tactical games use coupled commands to track player movement, especially if the player has a movement limit and wants to be able to undo or redo moves before committing to them.
+
+### Pros and Cons of the Command pattern
+
+Pros:
+
+- **Decoupling** the invoker from the actor provides an intermediate level of abstraction and control. Not only is this structure less likely to break when actions or inputs are added or changed, but it also allows you to add code to keep track of commands and their order (or sequence).
+- **Queued inputs** let you store, track, and control the execution of commands like an undo/redo system, macro key bindings, and command sequences.
+- Commands are treated as **first-class objects** meaning they can be extended just like any other class object in our projects.
+
+Cons:
+
+- **Code complexity**: Setting up the Command pattern structure requires a lot of work upfront, which can be daunting and counterproductive if you’re not intentional with what you’re trying to accomplish.
