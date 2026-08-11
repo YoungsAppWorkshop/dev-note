@@ -404,3 +404,95 @@ Pros:
 Cons:
 
 - **Code complexity**: Setting up the Command pattern structure requires a lot of work upfront, which can be daunting and counterproductive if you’re not intentional with what you’re trying to accomplish.
+
+## Ch 09. Decoupling Systems with the Observer Pattern
+
+In this chapter, we’ll create an event handling system to separate the object sending information from the object, or objects, receiving that information.
+
+At its core, the Observer pattern is a syncing machine – when data changes in one object, you want to keep any objects relying on that information up to date.
+
+This structure creates a one-to-many relationship between the subject sending out notifications and the list of observers listening for those notifications.
+
+The nice part is that the object sending out the bat signal that some data has changed doesn’t care who’s listening, or even if there is anyone listening. The message gets sent out just the same and the listeners are responsible for keeping action (or not) on the information they receive.
+
+### Breaking down the Observer pattern
+
+As part of the behavioral family of design patterns, the Observer pattern is all about communication between objects while keeping the objects sending information decoupled from the receiving objects. The Observer pattern lets you notify any listeners of specific state changes (changing values) or events (the player enters a battle) without tightly coupled references between those objects.
+
+The Observer pattern is most useful when:
+
+- You have an object that needs to broadcast information or changes to a variety of other objects.
+- You have an object with a changing state and don’t know how many other objects need to stay up to date.
+- You want to avoid tight coupling between objects that share a dependency.
+
+Subjects hold the data we want to broadcast, and listeners are listening for any changes so they can act accordingly. The subject isn’t in charge of anything other than signaling that a change has occurred; it’s up to the listeners to decide what to do with that information on their own.
+
+In an application or gaming scenario, you may want to notify different UI scripts of value changes so the display is synced with the data or sends out notifications when a player is hit or an enemy is destroyed.
+
+### Diagramming the Observer pattern
+
+![Observer Pattern](./imgs/ch09-01.png)
+
+Figure 9.3 shows the UML structure of the Observer pattern with its four components:
+
+- The **abstract subject** keeps track of all its observers and provides methods for adding and removing those observing objects.
+- A **concrete subject** stores state information and notifies all observers whenever the subject’s state changes.
+- The **abstract observer** has a single method for receiving and handling state changes sent from a subject.
+- The **concrete observer** keeps its own state in sync with the subject it’s observing and may sometimes store a reference to the subject.
+
+The one-to-many relationship between a subject and its observers decouples the sending object from the receiver, or receivers, which creates a clear separation of responsibility for both sides of the system while ensuring that state information is consistent between related and interested objects.
+
+### Pros and Cons of the Observer pattern
+
+Pros:
+
+- **One-to-many relationships** between a subject and its list of observers allow you to create an efficient notification system while keeping the actions of each component separate and independent.
+- **Light coupling** between subjects and observers is a key component of the pattern. Subjects only need a list of observers instead of specific information on the observer objects themselves, so both parts can exist in different layers or systems of your code.
+  - Decoupling subjects and observers also makes the components more **reusable**.
+- **Automatic broadcasting** between subjects and their observers allows you to add and remove as many observers as you want anytime you want.
+
+Cons:
+
+- **Unexpected changes** can cascade down a subject’s list of observers if the observers are not aware of what exactly is changing. These can be hard to track down in a distributed system like the Observer pattern, but they can be fixed by passing information to the observers about which changes are taking place, which we’ll implement later in the chapter.
+- **Notification order** can be tricky with this pattern because it’s so decoupled. Traditionally, there’s no centralized hub for the subject notifications to pass through, so controlling when and in what order they are executed isn’t possible. *However, the Event Queue pattern addresses this problem, which we’ll cover in Chapter 18.*
+- **Memory leaks and ghost objects** are a problem because each subject holds a list of strong references to their observers. When an observer is destroyed, it needs to be removed from the subject to free up the computing resources and avoid null references. It’s also a good idea to let observers know whether their subject has been destroyed so they can stop expecting notifications.
+
+### Choosing a communication strategy
+
+There is a spectrum of communication strategies that apply to the Observer pattern, but the extreme ends are simple – push or pull. The hard part is identifying the perfect sweet spot for your project because there’s no right or canon answer to this question:
+
+- The **push** strategy is just like it sounds – the subject is responsible for pushing any additional data to the observer, but this can get complicated if a lot of information is passed without being used. Your first instinct might be to create different data parameters for each type of observer, but this significantly decreases the usefulness of the Observer pattern because it increases the coupling between the subject and observer objects.
+- The **pull** strategy is the opposite – observers are in charge of grabbing whatever data they need from the subject once they are notified of a change. This scenario is completely decoupled, but it requires additional steps before the observer can execute any actions related to the subject’s notification.
+
+### Using C# event types
+
+The original pattern is still very useful for a one-to-many relationship between subject and observers (the waterfall analogy where you want observers to know everything happening downstream), but there are many common scenarios where that’s not enough, where observers may need to observe more than one subject at a time (we’ll call this the buffet scenario). In those many-to-many cases, we’re lucky enough to have the option of moving to native C# objects like events and Actions, which is the smart play, while the `UnityEvent` type plays better in the Unity **Inspector**.
+
+### Delegates and events
+
+In C#, the `delegate` type allows you to assign an entire method (with parameters, if it has any) to a variable, which in turn lets you pass the method to other methods or simply call the method programmatically. When paired with the `event` type, you have a built-in publisher-subscriber model ready to go, which is perfect for the Observer pattern; the subject is the publisher, and the observer is the subscribers. Not only that, but subscribers can also listen for as many events as they want. Unlike the waterfall model, events and delegates create a more buffet-style scenario, which is a more efficient solution when you want a more distributed Observer pattern implementation.
+
+### Updating to Action types
+
+`Action` types are a `delegate` and `event` package with a `void` return type; there’s just less code involved in the declaration. Calling, subscribing, and unsubscribing from an `Action` uses the same exact syntax we’ve already learned.
+
+### UnityEvents and the Inspector
+
+Now that we’ve exhausted ourselves with native C# types, let’s turn to the `UnityEvent` type. A `UnityEvent` works just like a C# event/delegate or action, meaning they subscribe, unsubscribe, and store a reference to a desired response when something happens. The big difference is that they can be configured in the Unity Editor, which opens a whole new world of possibilities, especially if your team has non-programmer members who need to access and test these features.
+
+### Performance considerations
+
+Performance is an important consideration with the Observer pattern because of its distributed and decoupled structure, so you need to pay attention to how many subjects and observers you’re going to have running around your game. Before diving into your code, run through the following list and ask yourself which solution is going to work best for your particular scenario:
+
+- When adding listeners, a C# `event` allocates less memory than a `UnityEvent` for a single listener. However, with two or more listeners, C# `events` create exponentially more garbage than `UnityEvents`.
+- When dispatching a single event, C# `events` create no garbage while `UnityEvents` generate garbage but only the first time it’s invoked.
+- When dispatching tons of events (and I mean tons), C# `events` considerably outperform `UnityEvents`. Even in the best-case scenario, `UnityEvents` are likely to be at least 2x slower than C# `events`. When you add event arguments into the mix, the disparity is even greater.
+
+### Picking the right implementation
+
+Before we close this out, I’m going to lay out the criteria and scenarios that best fit each implementation path I’ve laid out over the last 41 pages:
+
+- The **traditional** implementation is a great starting point, especially for scenarios with limited subjects and observers. However, this solution doesn’t add any benefits over event and Action types, so I would recommend upgrading.
+- The **delegate/event or Action** implementation is a perfect way to structure your Observer pattern if you’re working primarily in code. Not only is it easier to set up and manage, but it’s also the most performant option.
+- The **UnityEvent** implementation is a good fit when you need to work in the **Editor**, but this solution puts a strain on your game’s performance if you’re running a big, distributed network of subjects and listeners. However, be aware of the persistent versus non-persistent problem from the UnityEvents and the Inspector section. If you need to work in the **Editor**, I recommend upgrading to the `ScriptableObject` solution.
+- The **ScriptableObject** implementation is the best fit for in-editor work. Period. Not only does it separate listeners into self-contained assets, but you can also modify non-persistent listener subscriptions in the **Editor**. However, keep in mind that `ScriptableObject` events aren’t always the easiest to organize and find in code, so you’ll need to adapt the chapter content to fit your needs.
