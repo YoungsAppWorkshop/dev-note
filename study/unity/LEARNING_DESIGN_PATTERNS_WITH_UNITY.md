@@ -496,3 +496,64 @@ Before we close this out, I’m going to lay out the criteria and scenarios that
 - The **delegate/event or Action** implementation is a perfect way to structure your Observer pattern if you’re working primarily in code. Not only is it easier to set up and manage, but it’s also the most performant option.
 - The **UnityEvent** implementation is a good fit when you need to work in the **Editor**, but this solution puts a strain on your game’s performance if you’re running a big, distributed network of subjects and listeners. However, be aware of the persistent versus non-persistent problem from the UnityEvents and the Inspector section. If you need to work in the **Editor**, I recommend upgrading to the `ScriptableObject` solution.
 - The **ScriptableObject** implementation is the best fit for in-editor work. Period. Not only does it separate listeners into self-contained assets, but you can also modify non-persistent listener subscriptions in the **Editor**. However, keep in mind that `ScriptableObject` events aren’t always the easiest to organize and find in code, so you’ll need to adapt the chapter content to fit your needs.
+
+## Ch 10. Controlling Behavior with the State Pattern
+
+In this chapter, we’ll jump into more game mechanic territory with the State pattern to create an object that can change its behavior based on an internal state value.
+
+Like the Command pattern, the State pattern is all about encapsulating behavior to hide the inner workings of the system from the client. The difference is how transitions between behaviors are handled. Each state is responsible for deciding when to switch states and what the next state needs to be.
+
+You can use the State pattern in a variety of ways, but they all need a system for storing and managing the states in your game or application. We’ll start with a basic **finite-state machine (FSM)**, branch out into hierarchical and concurrent implementations, and end with a look at the importance and usability of tracking state history.
+
+### Breaking down the State pattern
+
+As part of the behavioral family of design patterns, the State pattern allows an object to change its internal behavior based on an internally tracked state. The internal state can be switched to any other concrete `state` object, which are self-contained classes that implement a common set of rules and customized logic. This means the State pattern is most useful when:
+
+- You want an object’s behavior to change (either at runtime or at every frame) based on an internal state.
+- You want to refactor an object’s long conditional statements into separate classes so it can be treated independently.
+- You want to add new behavior to an object without changing or breaking existing code.
+
+In the traditional State pattern, we’re more concerned with breaking different behaviors into their own self-contained states so the object can:
+
+- Defer state-specific logic to each state.
+- Allow the application to react differently depending on an object’s current state.
+
+### A little automata theory
+
+In contrast to the State pattern, FSMs are concerned with the states and transitions *between* states rather than the state behaviors themselves. This focus creates a fluid sequential or cyclical chain of events that almost seems tailor-made for programming scenarios, as shown in Figure 10.3.
+
+![FSM](./imgs/ch10-01.png)
+
+The good news is that these two concepts are not mutually exclusive (they’re actually more interlinked than some would like to admit) since the State pattern can absolutely be used to build an FSM.
+
+So, how can you identify an FSM? Well, FSMs are studied in computer science as part of **automata theory**, are popular with AI programmers, and have the following traits:
+
+- There are a fixed number of states our context (or state machine) can be in (i.e., running, jumping, swimming, and sitting on the couch).
+- There can only be one state active at any given time (so you can’t be sitting on the couch and running a marathon).
+- Events (which are generally inputs from the user) are sent to the state machine, which triggers a transition to the next state. For example, you’re on the couch hanging out (current state), you have a cup of coffee (input), and suddenly you get up and go for a run (transition to a different state).
+
+FSMs also have useful extensions for creating hierarchies of shared behavior to avoid repeating yourself using classic object-oriented programming inheritance (called **hierarchical state machines**), behaviors that run at the same time (called **concurrent state machines**), and a handy way of storing state history for easier redo/undo actions (called **pushdown automaton**). These extensions aren’t part of the original State pattern but they do provide wonderful concrete benefits when you’re dealing with complex real-time behaviors.
+
+### Diagramming the State pattern
+
+![State pattern](./imgs/ch10-02.png)
+
+Figure 10.4 shows the UML structure of the State pattern with its three components:
+
+- The **Context** stores the current state instance and defines the interface for clients to communicate with
+- The **State** provides a common interface for all the expected state behaviors
+- Each **Concrete State** is responsible for its own logic associated with each behavior or action and you can have as many Concrete States as you need.
+
+In the pattern structure, the context delegates responsibility to the current state, which executes its customized behavior. Since each state determines how and when to transition to the next state, the context is a constant clearinghouse for the changing current state. Like other behavioral patterns we’ve used, this system lets the client use the context wherever necessary without any knowledge of the current state or how states manage themselves and their transitions.
+
+### Pros and Cons of the State pattern
+
+Pros:
+
+- **Encapsulated object behavior** is a massive part of the State pattern and its biggest asset. Not only does this allow you to separate monolithic conditional statements into their own respective objects, but adding new states into the mix is much simpler and safer.
+- **Because each state contains its own behavior**, it also controls its transitions to and from other states without having to query other objects. This makes each state completely self-sufficient and changes your job from herding a giant class to doing what you want, and then to defining states and transitions to form a bigger behavior picture.
+- **Adding new states is easy** and doesn’t require the pattern structure or client code to change. Since states are their own masters, our job is to simply create a new state, define whatever behavior seems appropriate, and add in transitions (states can even be shared if you feel like it).
+
+Cons:
+
+- **Complexity** is the biggest drawback of the State pattern (as we’ve often seen with other patterns). While a system with a small number of states can be easily managed, things can quickly get out of hand the more states (and state transitions) you need to create and manage. However, this shouldn’t scare you away from using the State pattern – it’s extremely useful when building complex behavior systems that need to be self-sufficient.
